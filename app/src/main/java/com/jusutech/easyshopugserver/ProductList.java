@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -60,8 +61,6 @@ public class ProductList extends AppCompatActivity {
     RelativeLayout rootLayout;
 
 
-
-
     String categoryId = "";
     FirebaseRecyclerAdapter<Product, ProductViewHolder> adapter;
 
@@ -76,22 +75,22 @@ public class ProductList extends AppCompatActivity {
         storageReference = storage.getReference();
 
         //init
-        recyclerView = (RecyclerView)findViewById(R.id.recycler_product);
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_product);
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        rootLayout = (RelativeLayout)findViewById(R.id.rootLayout);
+        rootLayout = (RelativeLayout) findViewById(R.id.rootLayout);
 
-        fab = (FloatingActionButton)findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 showAddProductDialog();
             }
         });
-        if(getIntent() != null)
+        if (getIntent() != null)
             categoryId = getIntent().getStringExtra("CategoryId");
-        if(!categoryId.isEmpty())
+        if (!categoryId.isEmpty())
             loadListProduct(categoryId);
     }
 
@@ -104,13 +103,12 @@ public class ProductList extends AppCompatActivity {
         LayoutInflater inflater = this.getLayoutInflater();
         View add_menu_layout = inflater.inflate(R.layout.add_new_item_layout, null);
 
-        edtName= add_menu_layout.findViewById(R.id.editName);
+        edtName = add_menu_layout.findViewById(R.id.editName);
         editDescription = add_menu_layout.findViewById(R.id.editDescription);
         editDiscount = add_menu_layout.findViewById(R.id.editDiscount);
         editPrice = add_menu_layout.findViewById(R.id.editPrice);
         btnSelectImage = add_menu_layout.findViewById(R.id.select_image);
         btnUploadImage = add_menu_layout.findViewById(R.id.upload_image);
-
 
 
         //adding onclick event on the buttons
@@ -140,9 +138,9 @@ public class ProductList extends AppCompatActivity {
                 dialogInterface.dismiss();
 
                 //Creating a new category
-                if (newProduct != null){
+                if (newProduct != null) {
                     itemList.push().setValue(newProduct);
-                    Snackbar.make(rootLayout, "New Product " + newProduct.getName()+" has been added", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(rootLayout, "New Product " + newProduct.getName() + " has been added", Snackbar.LENGTH_SHORT).show();
                 }
             }
         });
@@ -156,6 +154,7 @@ public class ProductList extends AppCompatActivity {
         alertDialog.show();
 
     }
+
     private void chooseImage() {
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -172,7 +171,7 @@ public class ProductList extends AppCompatActivity {
             progressDialog.show();
 
             String imageName = UUID.randomUUID().toString();
-            final StorageReference imageFolder = storageReference.child("images/"+imageName);
+            final StorageReference imageFolder = storageReference.child("images/" + imageName);
             imageFolder.putFile(saveUri)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
@@ -201,19 +200,20 @@ public class ProductList extends AppCompatActivity {
                         @Override
                         public void onFailure(@NonNull Exception e) {
                             progressDialog.dismiss();
-                            Toast.makeText(ProductList.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ProductList.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     })
                     .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
                             double progress = (100 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
-                            progressDialog.setMessage("Uploaded"+progress+"%");
+                            progressDialog.setMessage("Uploaded" + progress + "%");
 
                         }
                     });
         }
     }
+
     private void loadListProduct(String categoryId) {
         adapter = new FirebaseRecyclerAdapter<Product, ProductViewHolder>(
                 Product.class,
@@ -241,11 +241,143 @@ public class ProductList extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == Common.PICK_IMAGE_REQUEST && resultCode == RESULT_OK
-                && data != null && data.getData() != null)
-        {
+        if (requestCode == Common.PICK_IMAGE_REQUEST && resultCode == RESULT_OK
+                && data != null && data.getData() != null) {
             saveUri = data.getData();
             btnSelectImage.setText("Image Selected");
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        if(item.getTitle().equals(Common.UPDATE))
+        {
+            showUpdateDialog(adapter.getRef(item.getOrder()).getKey(), adapter.getItem(item.getOrder()));
+        }
+        else if(item.getTitle().equals(Common.UPDATE))
+        {
+            deleteProduct(adapter.getRef(item.getOrder()).getKey());
+        }
+        return super.onContextItemSelected(item);
+    }
+
+    private void deleteProduct(String key) {
+        itemList.child(key).removeValue();
+        Snackbar.make(rootLayout, "Product has been deleted", Snackbar.LENGTH_SHORT).show();
+    }
+
+    private void showUpdateDialog(final String key, final Product item) {
+
+
+        final AlertDialog.Builder alertDialog = new AlertDialog.Builder(ProductList.this);
+        alertDialog.setTitle("Edit product");
+        alertDialog.setMessage("Please fill in the information");
+
+        LayoutInflater inflater = this.getLayoutInflater();
+        View add_menu_layout = inflater.inflate(R.layout.add_new_item_layout, null);
+
+        edtName = add_menu_layout.findViewById(R.id.editName);
+        editDescription = add_menu_layout.findViewById(R.id.editDescription);
+        editDiscount = add_menu_layout.findViewById(R.id.editDiscount);
+        editPrice = add_menu_layout.findViewById(R.id.editPrice);
+        btnSelectImage = add_menu_layout.findViewById(R.id.select_image);
+        btnUploadImage = add_menu_layout.findViewById(R.id.upload_image);
+
+        //set default values for the product
+        edtName.setText(item.getName());
+        editDescription.setText(item.getDescription());
+        editPrice.setText(item.getPrice());
+        editDiscount.setText(item.getDiscount());
+
+
+        //adding onclick event on the buttons
+        btnSelectImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                chooseImage();//let the user choose the image and save its uri
+            }
+        });
+
+        btnUploadImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                changeImage(item);
+                //validateName();//not to accept empty category name
+            }
+        });
+
+        alertDialog.setView(add_menu_layout);
+        alertDialog.setIcon(R.drawable.ic_cart_plus);
+
+
+        //setting the buttons
+        alertDialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+
+                //Creating a new category
+                    //update the information
+                    item.setName(edtName.getText().toString());
+                    item.setDescription(editDescription.getText().toString());
+                    item.setPrice(editPrice.getText().toString());
+                    item.setDiscount(editDiscount.getText().toString());
+
+                    itemList.child(key).setValue(item);
+                    Snackbar.make(rootLayout, "Product " + item.getName() + " has been updated", Snackbar.LENGTH_SHORT).show();
+
+            }
+        });
+        alertDialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+
+        alertDialog.show();
+    }
+
+    private void changeImage(final Product item) {
+
+        if (saveUri != null) {
+            final ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage("Uploading....");
+            progressDialog.show();
+
+            String imageName = UUID.randomUUID().toString();
+            final StorageReference imageFolder = storageReference.child("images/"+imageName);
+            imageFolder.putFile(saveUri)
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            progressDialog.dismiss();
+                            Toast.makeText(getApplicationContext(), "Image uploaded successfully",
+                                    Toast.LENGTH_SHORT).show();
+                            imageFolder.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    //set a value for a new category if image uploaded, and then get the download link
+                                    item.setImage(uri.toString());
+                                }
+                            });
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            progressDialog.dismiss();
+                            Toast.makeText(ProductList.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            double progress = (100 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                            progressDialog.setMessage("Uploaded"+progress+"%");
+
+                        }
+                    });
         }
     }
 }
