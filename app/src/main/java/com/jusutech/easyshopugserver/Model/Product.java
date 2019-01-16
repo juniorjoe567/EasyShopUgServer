@@ -6,18 +6,18 @@ import java.io.Serializable;
  * Created by Junior Joseph on 1/14/2019.
  */
 
-public class Product implements Serializable {
-    private String Name, Image, Description, Price, Discount, MenuID;
+public class Product {
+    private String Name, Image, Description, Price, Discount, Menuid;
     public Product() {
     }
 
-    public Product(String name, String image, String description, String price, String discount, String menuID) {
+    public Product(String name, String image, String description, String price, String discount, String menuid) {
         Name = name;
         Image = image;
         Description = description;
         Price = price;
         Discount = discount;
-        MenuID = menuID;
+        Menuid = menuid;
     }
 
     public String getName() {
@@ -60,12 +60,12 @@ public class Product implements Serializable {
         Discount = discount;
     }
 
-    public String getMenuID() {
-        return MenuID;
+    public String getMenuid() {
+        return Menuid;
     }
 
-    public void setMenuID(String menuID) {
-        MenuID = menuID;
+    public void setMenuid(String menuid) {
+        Menuid = menuid;
     }
 }
 
