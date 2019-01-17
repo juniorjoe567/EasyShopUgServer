@@ -61,4 +61,9 @@
     <string name="registered_two"><b>2.2</b> Users should be honestly to EASY SHOP registration information, the user agree to provide the registered information is true, accurate, complete, legal and effective, and of any change of user registration information, should be timely update the registered information.</string>
 
 
+    <string-array name="spinner_items">
+        <item>Placed</item>
+        <item>Being Shipped</item>
+        <item>Shipped</item>
+    </string-array>
 </resources>
