@@ -1,5 +1,6 @@
 package com.jusutech.easyshopugserver.Common;
 
+import com.jusutech.easyshopugserver.Model.Request;
 import com.jusutech.easyshopugserver.Model.User;
 
 /**
@@ -8,6 +9,7 @@ import com.jusutech.easyshopugserver.Model.User;
 
 public class Common {
     public static User currentUser;
+    public static Request currentRequest;
     public static final String UPDATE = "Update";
     public static final String DELETE = "Delete";
     public static final int PICK_IMAGE_REQUEST = 71;

@@ -1,6 +1,7 @@
 package com.jusutech.easyshopugserver;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.jusutech.easyshopugserver.Common.Common;
 import com.jusutech.easyshopugserver.Interface.ItemClickListener;
+import com.jusutech.easyshopugserver.Model.Order;
 import com.jusutech.easyshopugserver.Model.Request;
 import com.jusutech.easyshopugserver.ViewHolder.OrderViewHolder;
 
@@ -56,35 +58,48 @@ public class OrderStatus extends AppCompatActivity {
                 requests
         ) {
             @Override
-            protected void populateViewHolder(OrderViewHolder viewHolder, Request model, int position) {
+            protected void populateViewHolder(OrderViewHolder viewHolder, final Request model, final int position) {
                 viewHolder.txtOrderId.setText(adapter.getRef(position).getKey());
                 viewHolder.txtOrderStatus.setText(Common.convertCodeToStatus(model.getStatus()));
                 viewHolder.txtOrderAddress.setText(model.getAddress());
                 viewHolder.txtOrderPhone.setText(model.getPhone());
-                
-                viewHolder.setItemClickListener(new ItemClickListener() {
+
+                //new event button
+
+                viewHolder.btnEdit.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(View view, int position, boolean isLongClick) {
-                        
+                    public void onClick(View view) {
+                        ShowUpdateDialog(adapter.getRef(position).getKey(), adapter.getItem(position));
                     }
                 });
+
+                viewHolder.btnRemove.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        deleteOrder(adapter.getRef(position).getKey());
+                    }
+                });
+
+                viewHolder.btnDetails.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent orderDetail = new Intent(OrderStatus.this, OrderDetail.class);
+                        Common.currentRequest = model;
+                        orderDetail.putExtra("OrderId", adapter.getRef(position).getKey());
+                        startActivity(orderDetail);
+                    }
+                });
+
             }
         };
         adapter.notifyDataSetChanged();
         recyclerView.setAdapter(adapter);
     }
 
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        if(item.getTitle().equals(Common.UPDATE))
-            ShowUpdateDialog(adapter.getRef(item.getOrder()).getKey(), adapter.getItem(item.getOrder()));
-        else if(item.getTitle().equals(Common.DELETE))
-            deleteOrder(adapter.getRef(item.getOrder()).getKey());
-        return super.onContextItemSelected(item);
-    }
 
     private void deleteOrder(String key) {
         requests.child(key).removeValue();
+        adapter.notifyDataSetChanged();
     }
 
     private void ShowUpdateDialog(String key, final Request item) {
@@ -106,7 +121,8 @@ public class OrderStatus extends AppCompatActivity {
                dialogInterface.dismiss();
                item.setStatus(String.valueOf(spinner.getSelectedItemId()));
 
-               requests.child(localKey).setValue(item);
+               requests.child(localKey).setValue(item); //add to update size
+               adapter.notifyDataSetChanged();
             }
         });
         alertDialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
